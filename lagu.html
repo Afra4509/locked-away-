@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animasi Lirik Bergerak</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(41, 128, 185, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .lyrics-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .lyric-line {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 20px 0;
+            line-height: 1.5;
+            letter-spacing: 0.5px;
+            min-height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px) rotateX(-90deg);
+            animation: wordAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            text-shadow: 0 4px 20px rgba(52, 152, 219, 0.6),
+                         0 2px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .word:hover {
+            transform: translateY(-5px) scale(1.1);
+            text-shadow: 0 6px 30px rgba(52, 152, 219, 0.9),
+                         0 3px 15px rgba(0, 0, 0, 0.5);
+            color: #3498db;
+        }
+
+        @keyframes wordAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) rotateX(-90deg) scale(0.5);
+                filter: blur(10px);
+            }
+            60% {
+                transform: translateY(-8px) rotateX(10deg) scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) rotateX(0deg) scale(1);
+                filter: blur(0px);
+            }
+        }
+
+        .lyric-line.fade-out .word {
+            animation: wordDisappear 0.25s ease-in forwards;
+        }
+
+        @keyframes wordDisappear {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+                filter: blur(5px);
+            }
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c5364;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 25px rgba(52, 152, 219, 0.4);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        button.play::before {
+            content: '▶';
+            font-size: 22px;
+            margin-left: 3px;
+        }
+
+        button.restart::before {
+            content: '↻';
+            font-size: 28px;
+        }
+
+        @media (max-width: 768px) {
+            .lyric-line {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="lyrics-container">
+        <div id="lyricDisplay" class="lyric-line"></div>
+    </div>
+
+    <div class="controls">
+        <button class="play" onclick="startLyrics()" title="Mulai"></button>
+        <button class="restart" onclick="resetLyrics()" title="Ulang"></button>
+    </div>
+
+    <script>
+        // Ganti dengan lirik Anda sendiri (timing dalam detik)
+        const lyrics = [
+            { time: 0, text: "Tell me honestly would you still love me the same" },
+            { time: 3.2, text: "If I got locked away" },
+            { time: 5.0, text: "And we lost it all today" },
+            { time: 6.8, text: "Tell me honestly would you still love me the same" },
+            { time: 10.0, text: "If I showed you my flaws" },
+            { time: 11.5, text: "And if I couldn't be strong" },
+            { time: 13.2, text: "Tell me honestly would you still love me the same" },
+            { time: 17.5, text: "Would you still love me the same" }
+        ];
+
+        let currentIndex = 0;
+        let timeouts = [];
+        let startTime = 0;
+        let isPlaying = false;
+
+        const lyricDisplay = document.getElementById('lyricDisplay');
+
+        function displayLyric(index) {
+            if (index >= lyrics.length) {
+                isPlaying = false;
+                return;
+            }
+
+            // Fade out lirik sebelumnya
+            lyricDisplay.classList.add('fade-out');
+
+            setTimeout(() => {
+                // Hapus konten lama
+                lyricDisplay.innerHTML = '';
+                lyricDisplay.classList.remove('fade-out');
+
+                // Pecah lirik menjadi kata-kata
+                const words = lyrics[index].text.split(' ');
+                
+                // Tambahkan setiap kata dengan delay progresif yang lebih smooth
+                words.forEach((word, i) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    wordSpan.textContent = word;
+                    // Delay yang lebih cepat di awal, lebih smooth
+                    wordSpan.style.animationDelay = `${i * 0.06}s`;
+                    lyricDisplay.appendChild(wordSpan);
+                });
+
+            }, 150);
+
+            currentIndex = index;
+        }
+
+        function startLyrics() {
+            if (isPlaying) return;
+            
+            // Clear timeout sebelumnya
+            clearAllTimeouts();
+            
+            isPlaying = true;
+            startTime = Date.now();
+            currentIndex = 0;
+
+            // Tampilkan lirik pertama
+            displayLyric(0);
+
+            // Schedule lirik berikutnya
+            for (let i = 1; i < lyrics.length; i++) {
+                const delay = (lyrics[i].time - lyrics[0].time) * 1000;
+                const timeout = setTimeout(() => displayLyric(i), delay);
+                timeouts.push(timeout);
+            }
+        }
+
+        function resetLyrics() {
+            clearAllTimeouts();
+            isPlaying = false;
+            currentIndex = 0;
+            lyricDisplay.innerHTML = '';
+            lyricDisplay.classList.remove('fade-out');
+        }
+
+        function clearAllTimeouts() {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            timeouts = [];
+        }
+
+        // Auto start setelah 1 detik
+        setTimeout(() => {
+            startLyrics();
+        }, 1000);
+    </script>
+</body>
+</html>
