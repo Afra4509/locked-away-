@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animasi Lirik Bergerak</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(41, 128, 185, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .lyrics-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .lyric-line {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 20px 0;
+            line-height: 1.5;
+            letter-spacing: 0.5px;
+            min-height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px) rotateX(-90deg);
+            animation: wordAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            text-shadow: 0 4px 20px rgba(52, 152, 219, 0.6),
+                         0 2px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .word:hover {
+            transform: translateY(-5px) scale(1.1);
+            text-shadow: 0 6px 30px rgba(52, 152, 219, 0.9),
+                         0 3px 15px rgba(0, 0, 0, 0.5);
+            color: #3498db;
+        }
+
+        @keyframes wordAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) rotateX(-90deg) scale(0.5);
+                filter: blur(10px);
+            }
+            60% {
+                transform: translateY(-8px) rotateX(10deg) scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) rotateX(0deg) scale(1);
+                filter: blur(0px);
+            }
+        }
+
+        .lyric-line.fade-out .word {
+            animation: wordDisappear 0.25s ease-in forwards;
+        }
+
+        @keyframes wordDisappear {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+                filter: blur(5px);
+            }
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            padding: 10px 20px;
+            background: rgba(15, 32, 39, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 60px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2980b9 0%, #1a5276 100%);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        button:hover::before {
+            width: 80px;
+            height: 80px;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.15);
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        button.play::after {
+            content: '▶';
+            font-size: 18px;
+            margin-left: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        button.restart::after {
+            content: '↻';
+            font-size: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Timer display */
+        .timer {
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-left: 1px solid rgba(52, 152, 219, 0.3);
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3498db 0%, #5dade2 50%, #3498db 100%);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.8);
+            animation: shimmer 2s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .lyric-line {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="lyrics-container">
+        <div id="lyricDisplay" class="lyric-line"></div>
+    </div>
+
+    <div class="controls">
+        <button class="play" onclick="startLyrics()" title="Mulai"></button>
+        <button class="restart" onclick="resetLyrics()" title="Ulang"></button>
+        <div class="timer" id="timer">0:00</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <script>
+        // Timing disesuaikan dengan lagu (dalam detik dari awal)
+        const lyrics = [
+            { time: 0, text: "Tell me honestly would you still love me the same" },
+            { time: 5, text: "If I got locked away" },
+            { time: 8, text: "And we lost it all today" },
+            { time: 11, text: "Tell me honestly would you still love me the same" },
+            { time: 16, text: "If I showed you my flaws" },
+            { time: 18, text: "And if I couldn't be strong" },
+            { time: 21, text: "Tell me honestly would you still love me the same" },
+            { time: 33, text: "Would you still love me the same" }
+        ];
+
+        let currentIndex = 0;
+        let timeouts = [];
+        let startTime = 0;
+        let isPlaying = false;
+        let progressInterval = null;
+
+        const lyricDisplay = document.getElementById('lyricDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const timer = document.getElementById('timer');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function displayLyric(index) {
+            if (index >= lyrics.length) {
+                isPlaying = false;
+                return;
+            }
+
+            // Fade out lirik sebelumnya
+            lyricDisplay.classList.add('fade-out');
+
+            setTimeout(() => {
+                // Hapus konten lama
+                lyricDisplay.innerHTML = '';
+                lyricDisplay.classList.remove('fade-out');
+
+                // Pecah lirik menjadi kata-kata
+                const words = lyrics[index].text.split(' ');
+                
+                // Tambahkan setiap kata dengan delay progresif yang lebih smooth
+                words.forEach((word, i) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    wordSpan.textContent = word;
+                    // Delay yang lebih cepat di awal, lebih smooth
+                    wordSpan.style.animationDelay = `${i * 0.06}s`;
+                    lyricDisplay.appendChild(wordSpan);
+                });
+
+            }, 150);
+
+            currentIndex = index;
+        }
+
+        function startLyrics() {
+            if (isPlaying) return;
+            
+            // Clear timeout sebelumnya
+            clearAllTimeouts();
+            
+            isPlaying = true;
+            startTime = Date.now();
+            currentIndex = 0;
+
+            // Tampilkan lirik pertama
+            displayLyric(0);
+
+            // Schedule lirik berikutnya
+            for (let i = 1; i < lyrics.length; i++) {
+                const delay = (lyrics[i].time - lyrics[0].time) * 1000;
+                const timeout = setTimeout(() => displayLyric(i), delay);
+                timeouts.push(timeout);
+            }
+
+            // Update progress bar dan timer
+            const totalDuration = lyrics[lyrics.length - 1].time * 1000;
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min((elapsed / totalDuration) * 100, 100);
+                progressBar.style.width = progress + '%';
+                
+                // Update timer
+                const currentTime = elapsed / 1000;
+                timer.textContent = formatTime(currentTime);
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    timer.textContent = formatTime(lyrics[lyrics.length - 1].time);
+                }
+            }, 50);
+        }
+
+        function resetLyrics() {
+            clearAllTimeouts();
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            isPlaying = false;
+            currentIndex = 0;
+            lyricDisplay.innerHTML = '';
+            lyricDisplay.classList.remove('fade-out');
+            progressBar.style.width = '0%';
+            timer.textContent = '0:00';
+        }
+
+        function clearAllTimeouts() {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+            timeouts = [];
+        }
+
+        // Auto start setelah 1 detik
+        setTimeout(() => {
+            startLyrics();
+        }, 1000);
+    </script>
+</body>
+</html>
